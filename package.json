@@ -1,0 +1,33 @@
+{
+  "name": "node-algo-trading-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "start": "ts-node index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@alpacahq/alpaca-trade-api": "^2.11.0",
+    "dayjs": "^1.10.7",
+    "dotenv": "^10.0.0",
+    "lodash": "^4.17.21",
+    "node-fetch": "^3.1.0",
+    "rxjs": "^7.4.0",
+    "technicalindicators": "^3.1.0",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.4",
+    "@typescript-eslint/eslint-plugin": "^5.8.0",
+    "@typescript-eslint/parser": "^5.8.0",
+    "eslint": "^8.5.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.5.1"
+  }
+}
