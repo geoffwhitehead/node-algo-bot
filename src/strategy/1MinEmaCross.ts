@@ -1,8 +1,7 @@
 import * as ti from 'technicalindicators'
 import dayjs from "dayjs"
-import { getLatestValues, getValues } from "./utils"
-import { getBars, getClock, getPosition, websocket } from '../alpaca'
-import { createSocket } from 'dgram'
+import { getValues } from "./utils"
+import { closePosition, createOrder, getClock, getPosition } from '../alpaca'
 import { AlpacaBar } from '@alpacahq/alpaca-trade-api/dist/resources/datav2/entityv2'
 
 interface EmaCrossWithBuffer {
@@ -20,9 +19,6 @@ const mapTimeframeToMin = {
 
 export const init = async (args: EmaCrossWithBuffer) => {
     const { timeframe } = args
-    // const now = dayjs.tz(dayjs(), "America/New_York").subtract(3, 'days')
-    // const start = now.subtract(1, 'day').format()
-    // const end = now.format()
 
     loop(mapTimeframeToMin[timeframe] * 100, () => run(args))
 }
@@ -35,6 +31,7 @@ async function loop(interval: number, fn) {
 
 async function run(args: EmaCrossWithBuffer) {
     const { symbol, timeframe, closeVolatilityBuffer, openVolatilityBuffer } = args
+
     // isMarketOpen
     // return if not
     const { is_open } = await getClock();
@@ -56,32 +53,38 @@ async function run(args: EmaCrossWithBuffer) {
 
     // get ema
     const ema = getEMA(values)
+    const emaResult = ema.getResult()
 
+    // if position - determine if position should be closed
     if (position) {
-        if (position.side === 'long') {
-            const shouldClose = checkHistorySupportsAction({ values, ema: ema.getResult(), side: 'long', buffer: closeVolatilityBuffer })
-            if (shouldClose) {
-
-            }
-
+        const shouldClose = checkHistorySupportsAction({ values, ema: emaResult, side: position.side, buffer: closeVolatilityBuffer })
+        if (shouldClose) {
+            return closePosition(symbol)
         }
     }
-    // determine if buying or selling
 
 
-    // if buying
-    // should i close position? has latest value dropped below ema?
+    if (!position) {
+        // determine if downtrend or uptrend
+        const isUptrend = values.at(-1).ClosePrice < emaResult
 
-    // if selling
-    // should i close position? has latest value dropped below ema?
+        const side = isUptrend ? 'long' : 'short'
 
-    // if value below ema
-    // should i open sell position
+        // determine if position should be opened
+        const shouldOpenPosition = checkHistorySupportsAction({ values, ema: emaResult, side, buffer: openVolatilityBuffer })
 
-    // if value above ema
-    // should i open buy position
-
-    console.log('check')
+        if (shouldOpenPosition) {
+            // open position
+            const orderSide = side === 'short' ? 'sell' : 'buy'
+            return createOrder({
+                symbol,
+                notional: 10000, // in test
+                side: orderSide,
+                type: 'market',
+                time_in_force: 'day'
+            })
+        }
+    }
 }
 
 interface CheckHistory {

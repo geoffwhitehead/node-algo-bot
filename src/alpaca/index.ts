@@ -22,7 +22,27 @@ const getPosition = (symbol) => client.getPosition(symbol)
 
 const closePosition = (symbol: string) => client.closePosition(symbol)
 
+interface Order {
+    symbol: string,
+    side: 'buy' | 'sell',
+    type: 'market' | 'limit' | 'stop' | 'stop_limit' | 'trailing_stop',
+    time_in_force: 'day' | 'gtc' | 'opg' | 'cls' | 'ioc' | 'fok',
+    order_id?: string,
+}
+
+interface NotionalOrder extends Order {
+    notional: number,
+}
+interface QtyOrder extends Order {
+    qty: number,
+}
+
+type CreateOrder = NotionalOrder | QtyOrder
+
+const createOrder = (order: CreateOrder) => client.createOrder(order)
+
 export {
+    createOrder,
     closePosition,
     websocket,
     getBars,
